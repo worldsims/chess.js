@@ -207,10 +207,6 @@ var Chess = function(fen, game_type) {
     var square = 0;
     var valid = SYMBOLS + '12345678/';
 
-    if (!validate_fen(fen).valid) {
-      return false;
-    }
-
     clear();
 
     /* parse castling flags */
@@ -277,88 +273,6 @@ var Chess = function(fen, game_type) {
     return true;
   }
 
-  function validate_fen(fen) {
-    var errors = {
-       0: 'No errors.',
-       1: 'FEN string must contain six space-delimited fields.',
-       2: '6th field (move number) must be a positive integer.',
-       3: '5th field (half move counter) must be a non-negative integer.',
-       4: '4th field (en-passant square) is invalid.',
-       5: '3rd field (castling availability) is invalid.',
-       6: '2nd field (side to move) is invalid.',
-       7: '1st field (piece positions) does not contain 8 \'/\'-delimited rows.',
-       8: '1st field (piece positions) is invalid [consecutive numbers].',
-       9: '1st field (piece positions) is invalid [invalid piece].',
-      10: '1st field (piece positions) is invalid [row too large].',
-    };
-
-    /* 1st criterion: 6 space-seperated fields? */
-    var tokens = fen.split(/\s+/);
-    if (tokens.length !== 6) {
-      return {valid: false, error_number: 1, error: errors[1]};
-    }
-
-    /* 2nd criterion: move number field is a integer value > 0? */
-    if (isNaN(tokens[5]) || (parseInt(tokens[5], 10) <= 0)) {
-      return {valid: false, error_number: 2, error: errors[2]};
-    }
-
-    /* 3rd criterion: half move counter is an integer >= 0? */
-    if (isNaN(tokens[4]) || (parseInt(tokens[4], 10) < 0)) {
-      return {valid: false, error_number: 3, error: errors[3]};
-    }
-
-    /* 4th criterion: 4th field is a valid e.p.-string? */
-    if (!/^(-|[abcdefgh][36])$/.test(tokens[3])) {
-      return {valid: false, error_number: 4, error: errors[4]};
-    }
-
-    /* 5th criterion: 3th field is a valid castle-string? */
-    if( !/^(KQ?k?q?|Qk?q?|kq?|q|-)$/.test(tokens[2])) {
-      return {valid: false, error_number: 5, error: errors[5]};
-    }
-
-    /* 6th criterion: 2nd field is "w" (white) or "b" (black)? */
-    if (!/^(w|b)$/.test(tokens[1])) {
-      return {valid: false, error_number: 6, error: errors[6]};
-    }
-
-    /* 7th criterion: 1st field contains 8 rows? */
-    var rows = tokens[0].split('/');
-    if (rows.length !== 8) {
-      return {valid: false, error_number: 7, error: errors[7]};
-    }
-
-    /* 8th criterion: every row is valid? */
-    for (var i = 0; i < rows.length; i++) {
-      /* check for right sum of fields AND not two numbers in succession */
-      var sum_fields = 0;
-      var previous_was_number = false;
-
-      for (var k = 0; k < rows[i].length; k++) {
-        if (!isNaN(rows[i][k])) {
-          if (previous_was_number) {
-            return {valid: false, error_number: 8, error: errors[8]};
-          }
-          sum_fields += parseInt(rows[i][k], 10);
-          previous_was_number = true;
-        } else {
-          if (!/^[prnbqkPRNBQK]$/.test(rows[i][k])) {
-            return {valid: false, error_number: 9, error: errors[9]};
-          }
-          sum_fields += 1;
-          previous_was_number = false;
-        }
-      }
-      if (sum_fields !== 8) {
-        return {valid: false, error_number: 10, error: errors[10]};
-      }
-    }
-
-    /* everything's okay! */
-    return {valid: true, error_number: 0, error: errors[0]};
-  }
-
   function generate_fen() {
     var empty = 0;
     var fen = '';
@@ -403,16 +317,6 @@ var Chess = function(fen, game_type) {
     var epflags = (ep_square === EMPTY) ? '-' : algebraic(ep_square);
 
     return [fen, turn, cflags, epflags, half_moves, move_number].join(' ');
-  }
-
-  function set_header(args) {
-    for (var i = 0; i < args.length; i += 2) {
-      if (typeof args[i] === 'string' &&
-          typeof args[i + 1] === 'string') {
-        header[args[i]] = args[i + 1];
-      }
-    }
-    return header;
   }
 
   /* called when the initial board setup is changed with put() or remove().
@@ -852,87 +756,6 @@ var Chess = function(fen, game_type) {
     return in_check() && generate_moves().length === 0;
   }
 
-  function in_stalemate() {
-    return !in_check() && generate_moves().length === 0;
-  }
-
-  function insufficient_material() {
-    var pieces = {};
-    var bishops = [];
-    var num_pieces = 0;
-    var sq_color = 0;
-
-    for (var i = SQUARES.a8; i<= SQUARES.h1; i++) {
-      sq_color = (sq_color + 1) % 2;
-      if (i & 0x88) { i += 7; continue; }
-
-      var piece = board[i];
-      if (piece) {
-        pieces[piece.type] = (piece.type in pieces) ?
-                              pieces[piece.type] + 1 : 1;
-        if (piece.type === BISHOP) {
-          bishops.push(sq_color);
-        }
-        num_pieces++;
-      }
-    }
-
-    /* k vs. k */
-    if (num_pieces === 2) { return true; }
-
-    /* k vs. kn .... or .... k vs. kb */
-    else if (num_pieces === 3 && (pieces[BISHOP] === 1 ||
-                                 pieces[KNIGHT] === 1)) { return true; }
-
-    /* kb vs. kb where any number of bishops are all on the same color */
-    else if (num_pieces === pieces[BISHOP] + 2) {
-      var sum = 0;
-      var len = bishops.length;
-      for (var i = 0; i < len; i++) {
-        sum += bishops[i];
-      }
-      if (sum === 0 || sum === len) { return true; }
-    }
-
-    return false;
-  }
-
-  function in_threefold_repetition() {
-    /* TODO: while this function is fine for casual use, a better
-     * implementation would use a Zobrist key (instead of FEN). the
-     * Zobrist key would be maintained in the make_move/undo_move functions,
-     * avoiding the costly that we do below.
-     */
-    var moves = [];
-    var positions = {};
-    var repetition = false;
-
-    while (true) {
-      var move = undo_move();
-      if (!move) break;
-      moves.push(move);
-    }
-
-    while (true) {
-      /* remove the last two fields in the FEN string, they're not needed
-       * when checking for draw by rep */
-      var fen = generate_fen().split(' ').slice(0,4).join(' ');
-
-      /* has the position occurred three or move times */
-      positions[fen] = (fen in positions) ? positions[fen] + 1 : 1;
-      if (positions[fen] >= 3) {
-        repetition = true;
-      }
-
-      if (!moves.length) {
-        break;
-      }
-      make_move(moves.pop());
-    }
-
-    return repetition;
-  }
-
   function push(move) {
     history.push({
       move: move,
@@ -1153,36 +976,6 @@ var Chess = function(fen, game_type) {
     return '';
   }
 
-  function ascii() {
-    var s = '   +------------------------+\n';
-    for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
-      /* display the rank */
-      if (file(i) === 0) {
-        s += ' ' + '87654321'[rank(i)] + ' |';
-      }
-
-      /* empty piece */
-      if (board[i] == null) {
-        s += ' . ';
-      } else {
-        var piece = board[i].type;
-        var color = board[i].color;
-        var symbol = (color === WHITE) ?
-                     piece.toUpperCase() : piece.toLowerCase();
-        s += ' ' + symbol + ' ';
-      }
-
-      if ((i + 1) & 0x88) {
-        s += '|\n';
-        i += 8;
-      }
-    }
-    s += '   +------------------------+\n';
-    s += '     a  b  c  d  e  f  g  h\n';
-
-    return s;
-  }
-
   /*****************************************************************************
    * UTILITY FUNCTIONS
    ****************************************************************************/
@@ -1242,30 +1035,6 @@ var Chess = function(fen, game_type) {
 
   function trim(str) {
     return str.replace(/^\s+|\s+$/g, '');
-  }
-
-  /*****************************************************************************
-   * DEBUGGING UTILITIES
-   ****************************************************************************/
-  function perft(depth) {
-    var moves = generate_moves({legal: false});
-    var nodes = 0;
-    var color = turn;
-
-    for (var i = 0, len = moves.length; i < len; i++) {
-      make_move(moves[i]);
-      if (!king_attacked(color)) {
-        if (depth - 1 > 0) {
-          var child_nodes = perft(depth - 1);
-          nodes += child_nodes;
-        } else {
-          nodes++;
-        }
-      }
-      undo_move();
-    }
-
-    return nodes;
   }
 
   return {
@@ -1341,281 +1110,8 @@ var Chess = function(fen, game_type) {
       return in_check();
     },
 
-    in_checkmate: function() {
-      return in_checkmate();
-    },
-
-    in_stalemate: function() {
-      return in_stalemate();
-    },
-
-    in_draw: function() {
-      return half_moves >= 100 ||
-             in_stalemate() ||
-             insufficient_material() ||
-             in_threefold_repetition();
-    },
-
-    insufficient_material: function() {
-      return insufficient_material();
-    },
-
-    in_threefold_repetition: function() {
-      return in_threefold_repetition();
-    },
-
-    game_over: function() {
-      return half_moves >= 100 ||
-             in_checkmate() ||
-             in_stalemate() ||
-             insufficient_material() ||
-             in_threefold_repetition();
-    },
-
-    validate_fen: function(fen) {
-      return validate_fen(fen);
-    },
-
     fen: function() {
       return generate_fen();
-    },
-
-    pgn: function(options) {
-      /* using the specification from http://www.chessclub.com/help/PGN-spec
-       * example for html usage: .pgn({ max_width: 72, newline_char: "<br />" })
-       */
-      var newline = (typeof options === 'object' &&
-                     typeof options.newline_char === 'string') ?
-                     options.newline_char : '\n';
-      var max_width = (typeof options === 'object' &&
-                       typeof options.max_width === 'number') ?
-                       options.max_width : 0;
-      var result = [];
-      var header_exists = false;
-
-      /* add the PGN header headerrmation */
-      for (var i in header) {
-        /* TODO: order of enumerated properties in header object is not
-         * guaranteed, see ECMA-262 spec (section 12.6.4)
-         */
-        result.push('[' + i + ' \"' + header[i] + '\"]' + newline);
-        header_exists = true;
-      }
-
-      if (header_exists && history.length) {
-        result.push(newline);
-      }
-
-      /* pop all of history onto reversed_history */
-      var reversed_history = [];
-      while (history.length > 0) {
-        reversed_history.push(undo_move());
-      }
-
-      var moves = [];
-      var move_string = '';
-      var pgn_move_number = 1;
-
-      /* build the list of moves.  a move_string looks like: "3. e3 e6" */
-      while (reversed_history.length > 0) {
-        var move = reversed_history.pop();
-
-        /* if the position started with black to move, start PGN with 1. ... */
-        if (pgn_move_number === 1 && move.color === 'b') {
-          move_string = '1. ...';
-          pgn_move_number++;
-        } else if (move.color === 'w') {
-          /* store the previous generated move_string if we have one */
-          if (move_string.length) {
-            moves.push(move_string);
-          }
-          move_string = pgn_move_number + '.';
-          pgn_move_number++;
-        }
-
-        move_string = move_string + ' ' + move_to_san(move);
-        make_move(move);
-      }
-
-      /* are there any other leftover moves? */
-      if (move_string.length) {
-        moves.push(move_string);
-      }
-
-      /* is there a result? */
-      if (typeof header.Result !== 'undefined') {
-        moves.push(header.Result);
-      }
-
-      /* history should be back to what is was before we started generating PGN,
-       * so join together moves
-       */
-      if (max_width === 0) {
-        return result.join('') + moves.join(' ');
-      }
-
-      /* wrap the PGN output at max_width */
-      var current_width = 0;
-      for (var i = 0; i < moves.length; i++) {
-        /* if the current move will push past max_width */
-        if (current_width + moves[i].length > max_width && i !== 0) {
-
-          /* don't end the line with whitespace */
-          if (result[result.length - 1] === ' ') {
-            result.pop();
-          }
-
-          result.push(newline);
-          current_width = 0;
-        } else if (i !== 0) {
-          result.push(' ');
-          current_width++;
-        }
-        result.push(moves[i]);
-        current_width += moves[i].length;
-      }
-
-      return result.join('');
-    },
-
-    load_pgn: function(pgn, options) {
-      function mask(str) {
-        return str.replace(/\\/g, '\\');
-      }
-
-      /* convert a move from Standard Algebraic Notation (SAN) to 0x88
-       * coordinates
-      */
-      function move_from_san(move) {
-        var moves = generate_moves();
-        for (var i = 0, len = moves.length; i < len; i++) {
-          /* strip off any trailing move decorations: e.g Nf3+?! */
-          if (move.replace(/[+#?!=]+$/,'') ==
-              move_to_san(moves[i]).replace(/[+#?!=]+$/,'')) {
-            return moves[i];
-          }
-        }
-        return null;
-      }
-
-      function get_move_obj(move) {
-        return move_from_san(trim(move));
-      }
-
-      function has_keys(object) {
-        var has_keys = false;
-        for (var key in object) {
-          has_keys = true;
-        }
-        return has_keys;
-      }
-
-      function parse_pgn_header(header, options) {
-        var newline_char = (typeof options === 'object' &&
-                            typeof options.newline_char === 'string') ?
-                            options.newline_char : '\r?\n';
-        var header_obj = {};
-        var headers = header.split(new RegExp(mask(newline_char)));
-        var key = '';
-        var value = '';
-
-        for (var i = 0; i < headers.length; i++) {
-          key = headers[i].replace(/^\[([A-Z][A-Za-z]*)\s.*\]$/, '$1');
-          value = headers[i].replace(/^\[[A-Za-z]+\s"(.*)"\]$/, '$1');
-          if (trim(key).length > 0) {
-            header_obj[key] = value;
-          }
-        }
-
-        return header_obj;
-      }
-
-      var newline_char = (typeof options === 'object' &&
-                          typeof options.newline_char === 'string') ?
-                          options.newline_char : '\r?\n';
-        var regex = new RegExp('^(\\[(.|' + mask(newline_char) + ')*\\])' +
-                               '(' + mask(newline_char) + ')*' +
-                               '1.(' + mask(newline_char) + '|.)*$', 'g');
-
-      /* get header part of the PGN file */
-      var header_string = pgn.replace(regex, '$1');
-
-      /* no info part given, begins with moves */
-      if (header_string[0] !== '[') {
-        header_string = '';
-      }
-
-     reset();
-
-      /* parse PGN header */
-      var headers = parse_pgn_header(header_string, options);
-      for (var key in headers) {
-        set_header([key, headers[key]]);
-        if (key.toLowerCase() == 'variant' &&
-            headers[key].toLowerCase() == 'chess960') {
-            game_type = GAME_960;
-        }
-      }
-
-      /* load the FEN header if provided */
-      if ('FEN' in headers) {
-        load(headers['FEN']);
-      }
-
-      /* delete header to get the moves */
-      var ms = pgn.replace(header_string, '').replace(new RegExp(mask(newline_char), 'g'), ' ');
-
-      /* delete comments */
-      ms = ms.replace(/(\{[^}]+\})+?/g, '');
-
-      /* delete move numbers */
-      ms = ms.replace(/\d+\./g, '');
-
-
-      /* trim and get array of moves */
-      var moves = trim(ms).split(new RegExp(/\s+/));
-
-      /* delete empty entries */
-      moves = moves.join(',').replace(/,,+/g, ',').split(',');
-      var move = '';
-
-      for (var half_move = 0; half_move < moves.length - 1; half_move++) {
-        move = get_move_obj(moves[half_move]);
-
-        /* move not possible! (don't clear the board to examine to show the
-         * latest valid position)
-         */
-        if (move == null) {
-          return false;
-        } else {
-          make_move(move);
-        }
-      }
-
-      /* examine last move */
-      move = moves[moves.length - 1];
-      if (POSSIBLE_RESULTS.indexOf(move) > -1) {
-        if (has_keys(header) && typeof header.Result === 'undefined') {
-          set_header(['Result', move]);
-        }
-      }
-      else {
-        move = get_move_obj(move);
-        if (move == null) {
-          return false;
-        } else {
-          make_move(move);
-        }
-      }
-      return true;
-    },
-
-    header: function() {
-      return set_header(arguments);
-    },
-
-    ascii: function() {
-      return ascii();
     },
 
     turn: function() {
@@ -1690,10 +1186,6 @@ var Chess = function(fen, game_type) {
 
     remove: function(square) {
       return remove(square);
-    },
-
-    perft: function(depth) {
-      return perft(depth);
     },
 
     square_color: function(square) {
