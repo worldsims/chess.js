@@ -34,7 +34,9 @@ suite("Chess960", function() {
     {fen: 'bbrqn1kr/p2ppppp/2p1n3/8/p7/2PNN3/PP1PPPPP/BBR3KR w KQkq - 0 5',
       square: 'g1', verbose: false, moves: ['Kf1', 'O-O', 'O-O-O']},
     {fen: 'rb1knr1q/pp1b2pp/2pp1n2/5p2/1PP5/3NPN2/P1B3PP/R1BK1R1Q w KQkq - 0 9',
-      square: 'd1', verbose: false, moves: ['Kd2', 'Ke2', 'Ke1', 'O-O']}
+      square: 'd1', verbose: false, moves: ['Kd2', 'Ke2', 'Ke1', 'O-O']},
+    {fen: 'rkr4n/pppbpqbp/3pnpp1/3N4/P3N3/R2P4/1PPBPPPP/1KR2BQ1 b Kkq - 3 8',
+      square: 'b8', verbose: false, moves: ['O-O']}
   ];
 
   positions.forEach(function(position) {

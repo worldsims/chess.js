@@ -527,9 +527,9 @@ var Chess = function(fen, game_type) {
         } else {
           /* king-side castling (CHESS 960) */
           var king_from = kings[us];
-          var king_to = us ? SQUARES.g1 : SQUARES.g8;
+          var king_to = us == 'w' ? SQUARES.g1 : SQUARES.g8;
           var rook_from = ROOKS[us][1].square;
-          var rook_to = us ? SQUARES.f1 : SQUARES.f8;
+          var rook_to = us == 'w' ? SQUARES.f1 : SQUARES.f8;
 
           /* is there a clear shot between the king-side rook and its castling_to
           * square (ignoring the friendly)?
