@@ -44,7 +44,6 @@ suite("Chess960", function() {
 
       var moves = chess.moves({square: position.square, verbose: position.verbose});
       var passed = position.moves.length == moves.length;
-      console.log(moves);
 
       for (var j = 0; j < moves.length; j++) {
         if (!position.verbose) {
@@ -63,3 +62,50 @@ suite("Chess960", function() {
 
 });
 
+suite("Make Move", function() {
+
+  var positions = [
+    {fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+     legal: true,
+     move: 'e4',
+     next: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'},
+    {fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+     legal: false,
+     move: 'e5'},
+    {fen: '7k/3R4/3p2Q1/6Q1/2N1N3/8/8/3R3K w - - 0 1',
+     legal: true,
+     move: 'Rd8#',
+     next: '3R3k/8/3p2Q1/6Q1/2N1N3/8/8/3R3K b - - 1 1'},
+    {fen: 'rnbqkbnr/pp3ppp/2pp4/4pP2/4P3/8/PPPP2PP/RNBQKBNR w KQkq e6 0 1',
+     legal: true,
+     move: 'fxe6',
+     next: 'rnbqkbnr/pp3ppp/2ppP3/8/4P3/8/PPPP2PP/RNBQKBNR b KQkq - 0 1',
+     captured: 'p'},
+    {fen: 'rnbqkbnr/pppp2pp/8/4p3/4Pp2/2PP4/PP3PPP/RNBQKBNR b KQkq e3 0 1',
+     legal: true,
+     move: 'fxe3',
+     next: 'rnbqkbnr/pppp2pp/8/4p3/8/2PPp3/PP3PPP/RNBQKBNR w KQkq - 0 2',
+     captured: 'p'},
+    {fen: 'r1kqnnbr/ppbppppp/2p5/8/8/8/8/K7 b kq a3 0 3',
+      legal: true,
+      move: 'd6',
+      next: 'r1kqnnbr/ppb1pppp/2pp4/8/8/8/8/K7 w kq - 0 4'}
+  ];
+
+  positions.forEach(function(position) {
+    var chess = new Chess(position.fen, 1);
+    test(position.fen + ' (' + position.move + ' ' + position.legal + ')', function() {
+      var result = chess.move(position.move);
+      if (position.legal) {
+        console.log(chess.fen());
+        assert(result
+               && chess.fen() == position.next
+               && result.captured == position.captured);
+      } else {
+        assert(!result);
+      }
+    });
+
+  });
+
+});
