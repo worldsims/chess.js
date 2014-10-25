@@ -498,7 +498,7 @@ var Chess = function(fen, game_type) {
       move.promotion = promotion;
     }
 
-    if (board[to]) {
+    if (board[to] && from !== to) {
       move.captured = board[to].type;
     } else if (flags & BITS.EP_CAPTURE) {
         move.captured = PAWN;
@@ -741,11 +741,15 @@ var Chess = function(fen, game_type) {
     /* filter out illegal moves */
     var legal_moves = [];
     for (var i = 0, len = moves.length; i < len; i++) {
-      make_move(moves[i]);
-      if (!king_attacked(us)) {
-        legal_moves.push(moves[i]);
+      /* hack for chess960 castle when king stays in place - undo fucks it up */
+      if (moves[i].from == moves[i].to) legal_moves.push(moves[i]);
+      else {
+        make_move(moves[i]);
+        if (!king_attacked(us)) {
+          legal_moves.push(moves[i]);
+        }
+        undo_move();
       }
-      undo_move();
     }
 
     return legal_moves;
