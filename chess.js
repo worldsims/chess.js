@@ -631,9 +631,7 @@ var Chess = function(fen, game_type) {
           * square (ignoring the friendly)?
           */
           var rook_unimpeded = true;
-          if (rook_from == rook_to) {
-            rook_unimpeded = false;
-          } else {
+          if (rook_from != rook_to) {
             var delta = (rook_from - rook_to > 0) ? -1 : 1;
             for (var i = rook_from + delta; i != rook_to; i += delta) {
               if (board[i] && i != kings[us]) {
@@ -649,7 +647,6 @@ var Chess = function(fen, game_type) {
           var king_unimpeded = true;
           var checked = false;
           if (king_from == king_to) {
-            king_unimpeded = false;
             checked = attacked(them, king_to);
           } else {
             var delta = (king_from - king_to > 0) ? -1 : 1;
