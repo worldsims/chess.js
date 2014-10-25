@@ -36,7 +36,7 @@ suite("Chess960", function() {
     {fen: 'rb1knr1q/pp1b2pp/2pp1n2/5p2/1PP5/3NPN2/P1B3PP/R1BK1R1Q w KQkq - 0 9',
       square: 'd1', verbose: false, moves: ['Kd2', 'Ke2', 'Ke1', 'O-O']},
     {fen: 'rkr4n/pppbpqbp/3pnpp1/3N4/P3N3/R2P4/1PPBPPPP/1KR2BQ1 b Kkq - 3 8',
-      square: 'b8', verbose: false, moves: ['O-O']}
+      square: 'b8', verbose: false, moves: ['O-O']},
   ];
 
   positions.forEach(function(position) {
@@ -91,7 +91,11 @@ suite("Make Move", function() {
     {fen: 'r1kqnnbr/ppbppppp/2p5/8/8/8/8/K7 b kq a3 0 3',
       legal: true,
       move: 'd6',
-      next: 'r1kqnnbr/ppb1pppp/2pp4/8/8/8/8/K7 w kq - 0 4'}
+      next: 'r1kqnnbr/ppb1pppp/2pp4/8/8/8/8/K7 w kq - 0 4'},
+    {fen: 'rkr3qn/pppbppbp/3pn1p1/8/P7/R2PN1N1/1PPBPPPP/1KR2BQ1 b Kkq - 3 6',
+      legal: true,
+      move: 'Qd8',
+      next: 'rkrq3n/pppbppbp/3pn1p1/8/P7/R2PN1N1/1PPBPPPP/1KR2BQ1 w Kkq - 4 7'}
   ];
 
   positions.forEach(function(position) {

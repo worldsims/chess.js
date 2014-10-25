@@ -645,8 +645,8 @@ var Chess = function(fen, game_type) {
     /* filter out illegal moves */
     var legal_moves = [];
     for (var i = 0, len = moves.length; i < len; i++) {
-      /* hack for chess960 castle when king stays in place - undo fucks it up */
-      if (moves[i].from == moves[i].to) legal_moves.push(moves[i]);
+      /* hack for chess960 castle - undo fucks it up */
+      if (game_type == GAME_960 && (moves[i].flags & BITS.KSIDE_CASTLE || moves[i].flags & BITS.QSIDE_CASTLE)) legal_moves.push(moves[i]);
       else {
         make_move(moves[i]);
         if (!king_attacked(us)) {
