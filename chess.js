@@ -568,34 +568,76 @@ var Chess = function(fen) {
      * single square move generation on the king's square
      */
     if ((!single_square) || last_sq === kings[us]) {
-      /* king-side castling */
-      if (castling[us] & BITS.KSIDE_CASTLE) {
-        var castling_from = kings[us];
-        var castling_to = castling_from + 2;
+      if (header['Variant'] == 'Chess960') {
+        var castleTo = function(side, kTo, rTo) {
+              // console.log(side, kTo, rTo);
+          if (castling[us] & side) {
+            var kFrom = kings[us];
+            var allowed = true;
+            if (kFrom != kTo) {
+              for (var i = kFrom; i != kTo; i += (kFrom > kTo ? -1 : 1)) {
+                allowed = allowed && (!board[i] || ((board[i].type == 'k' || board[i].type == 'r') && board[i].color == us));
+                allowed = allowed && !attacked(them, i);
+              }
+            }
+            var rFrom;
+            for (var i = kFrom; i >= 0 && i <= 119; i+= (us == 'w' ? 1 : -1)) {
+              if (board[i] && board[i].color == us && board[i].type == 'r') {
+                rFrom = i;
+                break;
+              }
+            }
+              // console.log(rFrom);
+            allowed = allowed && !!rFrom;
+            if (allowed) {
+              if (rFrom != rTo) {
+                for (var i = rFrom; i != rTo; i+= (rFrom > rTo ? -1 : 1)) {
+                  allowed = allowed && (!board[i] || ((board[i].type == 'k' || board[i].type == 'r') && board[i].color == us));
+                }
+              }
+              // console.log(allowed);
+              if (allowed) add_move(board, moves, kings[us], kTo, side);
+            }
+          }
+        };
+        castleTo(
+            BITS.KSIDE_CASTLE,
+            us == 'w' ? SQUARES.g1 : SQUARES.g8, 
+            us == 'w' ? SQUARES.f1 : SQUARES.f8);
+        castleTo(
+            BITS.QSIDE_CASTLE,
+            us == 'w' ? SQUARES.c1 : SQUARES.c8, 
+            us == 'w' ? SQUARES.d1 : SQUARES.d8);
+      } else {
+        /* king-side castling */
+        if (castling[us] & BITS.KSIDE_CASTLE) {
+          var castling_from = kings[us];
+          var castling_to = castling_from + 2;
 
-        if (board[castling_from + 1] == null &&
-            board[castling_to]       == null &&
-            !attacked(them, kings[us]) &&
-            !attacked(them, castling_from + 1) &&
-            !attacked(them, castling_to)) {
-          add_move(board, moves, kings[us] , castling_to,
-                   BITS.KSIDE_CASTLE);
+          if (board[castling_from + 1] == null &&
+              board[castling_to]       == null &&
+              !attacked(them, kings[us]) &&
+              !attacked(them, castling_from + 1) &&
+              !attacked(them, castling_to)) {
+            add_move(board, moves, kings[us] , castling_to,
+                    BITS.KSIDE_CASTLE);
+          }
         }
-      }
 
-      /* queen-side castling */
-      if (castling[us] & BITS.QSIDE_CASTLE) {
-        var castling_from = kings[us];
-        var castling_to = castling_from - 2;
+        /* queen-side castling */
+        if (castling[us] & BITS.QSIDE_CASTLE) {
+          var castling_from = kings[us];
+          var castling_to = castling_from - 2;
 
-        if (board[castling_from - 1] == null &&
-            board[castling_from - 2] == null &&
-            board[castling_from - 3] == null &&
-            !attacked(them, kings[us]) &&
-            !attacked(them, castling_from - 1) &&
-            !attacked(them, castling_to)) {
-          add_move(board, moves, kings[us], castling_to,
-                   BITS.QSIDE_CASTLE);
+          if (board[castling_from - 1] == null &&
+              board[castling_from - 2] == null &&
+              board[castling_from - 3] == null &&
+              !attacked(them, kings[us]) &&
+              !attacked(them, castling_from - 1) &&
+              !attacked(them, castling_to)) {
+            add_move(board, moves, kings[us], castling_to,
+                    BITS.QSIDE_CASTLE);
+          }
         }
       }
     }
