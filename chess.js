@@ -33,7 +33,7 @@
  *  https://github.com/jhlywa/chess.js/blob/master/LICENSE
  */
 
-var Chess = function(fen) {
+var Chess = function(fen, game_type) {
 
   /* jshint indent: false */
 
@@ -165,7 +165,7 @@ var Chess = function(fen) {
   var move_number = 1;
   var history = [];
   var header = {};
-  var game_type = GAME_STANDARD;
+  game_type = game_type || GAME_STANDARD;
 
   /* if the user passes in a fen string, load it, else default to
    * starting position
@@ -1294,6 +1294,10 @@ var Chess = function(fen) {
                 return keys;
               })(),
     FLAGS: FLAGS,
+    GAME_TYPES: {
+      STANDARD: GAME_STANDARD,
+      CHESS960: GAME_960
+    },
 
     /***************************************************************************
      * PUBLIC API
