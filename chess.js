@@ -809,7 +809,7 @@ var Chess = function(fen, game_type) {
         var rook_to = (us == 'w') ? SQUARES.d1 : SQUARES.d8;
         var rook_from = ROOKS[us][0].square;
         board[rook_to] = {type: ROOK, color: us};
-        if (rook_to != rook_from && board[rook_from].type == ROOK) { 
+        if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) { 
           board[rook_from] = null;
         }
       }
@@ -913,7 +913,7 @@ var Chess = function(fen, game_type) {
       board[rook_to] = {type: ROOK, color: us};
 
       /* be sure rook_from isn't the king (in 960) */
-      if (rook_to != rook_from && board[rook_from].type == ROOK) {
+      if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) {
         board[rook_from] = null;
       }
     }
