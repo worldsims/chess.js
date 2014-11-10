@@ -1121,8 +1121,14 @@ var Chess = function(fen, game_type) {
     remove_disambiguation: function(san) {
       var len = san.length;
       if (len < 4 || (san.indexOf('x') !== -1 && len < 5) || san[0] === san[0].toLowerCase()) return;
-      var alt = san.replace(/^([NBRQ])[a-h][1-8](.+)$/, '$1$2');
-      if (alt !== san) return alt;
+      var alt, alts = [];
+      alt = san.replace(/^([NBRQ])[a-h][1-8](.+)$/, '$1$2');
+      if (alt && alt !== san) alts.push(alt);
+      alt = san.replace(/^([NBRQ])([a-h])[1-8](.+)$/, '$1$2$3');
+      if (alt && alt !== san) alts.push(alt);
+      alt = san.replace(/^([NBRQ])[a-h]([1-8])(.+)$/, '$1$2$3');
+      if (alt && alt !== san) alts.push(alt);
+      return alts;
     },
 
     move: function(move) {
@@ -1147,10 +1153,10 @@ var Chess = function(fen, game_type) {
           }
         }
         if (!move_obj) {
-          var alt = this.remove_disambiguation(move);
-          if (alt) {
+          var alts = this.remove_disambiguation(move);
+          if (alts && alts.length > 0) {
             for (var i = 0, len = moves.length; i < len; i++) {
-              if (alt === move_to_san(moves[i])) {
+              if (alts.indexOf(move_to_san(moves[i])) !== -1) {
                 move_obj = moves[i];
                 break;
               }
