@@ -237,7 +237,7 @@ var Chess = function(fen, game_type) {
         put({type: piece.toLowerCase(), color: color}, algebraic(square));
 
         /* keep track of the rook squares for 960 castling */
-        if (board[square].type == ROOK && game_type == GAME_960) {
+        if (board[square] && board[square].type == ROOK && game_type == GAME_960) {
           if (castling[color] & BITS.QSIDE_CASTLE && kings[color] == EMPTY) {
             ROOKS[color][0] = {square: square, flag: BITS.QSIDE_CASTLE};
           }
