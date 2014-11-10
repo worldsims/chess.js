@@ -1118,6 +1118,13 @@ var Chess = function(fen, game_type) {
       return turn;
     },
 
+    remove_disambiguation: function(san) {
+      var len = san.length;
+      if (len < 4 || (san.indexOf('x') !== -1 && len < 5) || san[0] === san[0].toLowerCase()) return;
+      var alt = san.replace(/^([NBRQ])[a-h][1-8](.+)$/, '$1$2');
+      if (alt !== san) return alt;
+    },
+
     move: function(move) {
       /* The move function can be called with in the following parameters:
        *
@@ -1137,6 +1144,17 @@ var Chess = function(fen, game_type) {
           if (move === move_to_san(moves[i])) {
             move_obj = moves[i];
             break;
+          }
+        }
+        if (!move_obj) {
+          var alt = this.remove_disambiguation(move);
+          if (alt) {
+            for (var i = 0, len = moves.length; i < len; i++) {
+              if (alt === move_to_san(moves[i])) {
+                move_obj = moves[i];
+                break;
+              }
+            }
           }
         }
       } else if (typeof move === 'object') {
