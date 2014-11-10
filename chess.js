@@ -1122,11 +1122,11 @@ var Chess = function(fen, game_type) {
       var len = san.length;
       if (len < 4 || (san.indexOf('x') !== -1 && len < 5) || san[0] === san[0].toLowerCase()) return;
       var alt, alts = [];
-      alt = san.replace(/^([NBRQ])[a-h][1-8](.+)$/, '$1$2');
+      alt = san.replace(/^([NBRQ])[a-h]?[1-8]?(x?[a-h][1-8][\+\#]?)$/, '$1$2');
       if (alt && alt !== san) alts.push(alt);
-      alt = san.replace(/^([NBRQ])([a-h])[1-8](.+)$/, '$1$2$3');
+      alt = san.replace(/^([NBRQ])([a-h])[1-8]?(x?[a-h][1-8][\+\#]?)$/, '$1$2$3');
       if (alt && alt !== san) alts.push(alt);
-      alt = san.replace(/^([NBRQ])[a-h]([1-8])(.+)$/, '$1$2$3');
+      alt = san.replace(/^([NBRQ])[a-h]?([1-8])(x?[a-h][1-8][\+\#]?)$/, '$1$2$3');
       if (alt && alt !== san) alts.push(alt);
       return alts;
     },

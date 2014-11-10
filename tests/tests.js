@@ -300,6 +300,14 @@ suite("Make Move", function() {
      legal: true,
      move: 'Rf6f5',
      next: '3R1B2/8/1B1rq3/3qkr1R/1R1rqr1B/8/3BR3/K7 w KQkq - 4 3'},
+    {fen: '3R4/6B1/1B1r1q2/3qkr1R/1R1rqr1B/8/3BR3/K7 w KQkq - 6 4',
+     legal: true,
+     move: 'Re8+',
+     next: '4R3/6B1/1B1r1q2/3qkr1R/1R1rqr1B/8/3BR3/K7 b KQkq - 7 4'},
+    {fen: '3R4/6B1/1B1r1q2/3qkr1R/1R1rqr1B/8/3BR3/K7 w KQkq - 6 4',
+     legal: true,
+     move: 'Rde8+',
+     next: '4R3/6B1/1B1r1q2/3qkr1R/1R1rqr1B/8/3BR3/K7 b KQkq - 7 4'},
     {fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
      legal: false,
      move: 'e5'},
@@ -325,6 +333,7 @@ suite("Make Move", function() {
     test(position.fen + ' (' + position.move + ' ' + position.legal + ')', function() {
       var result = chess.move(position.move);
       if (position.legal) {
+        // console.log(chess.fen());
         assert(result
                && chess.fen() == position.next
                && result.captured == position.captured);
