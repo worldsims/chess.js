@@ -537,7 +537,7 @@ var Chess = function(fen, game_type) {
           var rook_unimpeded = true;
           if (rook_from != rook_to) {
             var delta = (rook_from - rook_to > 0) ? -1 : 1;
-            for (var i = rook_from + delta; i != rook_to; i += delta) {
+            for (var i = rook_from + delta; i != (rook_to + delta); i += delta) {
               if (board[i] && i != kings[us]) {
                 rook_unimpeded = false;
                 break;
@@ -554,7 +554,7 @@ var Chess = function(fen, game_type) {
             checked = attacked(them, king_to);
           } else {
             var delta = (king_from - king_to > 0) ? -1 : 1;
-            for (var i = king_from + delta; i != king_to; i += delta) {
+            for (var i = king_from + delta; i != (king_to + delta); i += delta) {
               if (board[i] && i != ROOKS[us][1].square) {
                 king_unimpeded = false;
                 break;
@@ -599,7 +599,7 @@ var Chess = function(fen, game_type) {
           var rook_unimpeded = true;
           if (rook_from != rook_to) {
             var delta = (rook_from - rook_to > 0) ? -1 : 1;
-            for (var i = rook_from + delta; i != rook_to; i += delta) {
+            for (var i = rook_from + delta; i != (rook_to + delta); i += delta) {
               if (board[i] && i != kings[us]) {
                 rook_unimpeded = false;
                 break;
@@ -616,7 +616,7 @@ var Chess = function(fen, game_type) {
             checked = attacked(them, king_to);
           } else {
             var delta = (king_from - king_to > 0) ? -1 : 1;
-            for (var i = king_from + delta; i != king_to; i += delta) {
+            for (var i = king_from + delta; i != (king_to + delta); i += delta) {
               if (board[i] && i != ROOKS[us][0].square) {
                 king_unimpeded = false;
                 break;
