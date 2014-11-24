@@ -662,7 +662,7 @@ var Chess = function(fen, game_type) {
   /* convert a move from 0x88 coordinates to Standard Algebraic Notation
    * (SAN)
    */
-  function move_to_san(move) {
+  function move_to_san(move, precomputedMoves) {
     var output = '';
 
     if (move.flags & BITS.KSIDE_CASTLE) {
@@ -670,7 +670,7 @@ var Chess = function(fen, game_type) {
     } else if (move.flags & BITS.QSIDE_CASTLE) {
       output = 'O-O-O';
     } else {
-      var disambiguator = get_disambiguator(move);
+      var disambiguator = get_disambiguator(move, precomputedMoves);
 
       if (move.piece !== PAWN) {
         output += move.piece.toUpperCase() + disambiguator;
@@ -922,8 +922,8 @@ var Chess = function(fen, game_type) {
   }
 
   /* this function is used to uniquely identify ambiguous moves */
-  function get_disambiguator(move) {
-    var moves = generate_moves();
+  function get_disambiguator(move, precomputedMoves) {
+    var moves = precomputedMoves || generate_moves();
 
     var from = move.from;
     var to = move.to;
@@ -1088,13 +1088,11 @@ var Chess = function(fen, game_type) {
        */
 
       var ugly_moves = generate_moves(options);
+
       var moves = [];
 
       for (var i = 0, len = ugly_moves.length; i < len; i++) {
 
-        /* does the user want a full move object (most likely not), or just
-         * SAN
-         */
         if (typeof options !== 'undefined' && 'verbose' in options &&
             options.verbose) {
           moves.push(make_pretty(ugly_moves[i]));
@@ -1104,6 +1102,16 @@ var Chess = function(fen, game_type) {
       }
 
       return moves;
+    },
+
+    dests: function() {
+      var dests = {};
+      generate_moves().forEach(function(move) {
+        var m = [algebraic(move.from), algebraic(move.to)];
+        if (dests[m[0]]) dests[m[0]].push(m[1]);
+        else dests[m[0]] = [m[1]];
+      });
+      return dests;
     },
 
     in_check: function() {
@@ -1147,7 +1155,7 @@ var Chess = function(fen, game_type) {
       if (typeof move === 'string') {
         /* convert the move string to a move object */
         for (var i = 0, len = moves.length; i < len; i++) {
-          if (move === move_to_san(moves[i])) {
+          if (move === move_to_san(moves[i], moves)) {
             move_obj = moves[i];
             break;
           }
@@ -1156,7 +1164,7 @@ var Chess = function(fen, game_type) {
           var alts = this.remove_disambiguation(move);
           if (alts && alts.length > 0) {
             for (var i = 0, len = moves.length; i < len; i++) {
-              if (alts.indexOf(move_to_san(moves[i])) !== -1) {
+              if (alts.indexOf(move_to_san(moves[i], moves)) !== -1) {
                 move_obj = moves[i];
                 break;
               }
