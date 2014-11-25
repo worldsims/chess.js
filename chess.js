@@ -238,11 +238,13 @@ var Chess = function(fen, game_type) {
 
         /* keep track of the rook squares for 960 castling */
         if (board[square] && board[square].type == ROOK && game_type == GAME_960) {
-          if (castling[color] & BITS.QSIDE_CASTLE && kings[color] == EMPTY) {
-            ROOKS[color][0] = {square: square, flag: BITS.QSIDE_CASTLE};
-          }
-          if (castling[color] & BITS.KSIDE_CASTLE && kings[color] != EMPTY) {
-            ROOKS[color][1] = {square: square, flag: BITS.KSIDE_CASTLE};
+          if ((color == 'b' && square < SQUARES.a7) || (color == 'w' && square > SQUARES.h2)) {
+            if (castling[color] & BITS.QSIDE_CASTLE && kings[color] == EMPTY) {
+              ROOKS[color][0] = {square: square, flag: BITS.QSIDE_CASTLE};
+            }
+            if (castling[color] & BITS.KSIDE_CASTLE && kings[color] != EMPTY) {
+              ROOKS[color][1] = {square: square, flag: BITS.KSIDE_CASTLE};
+            }
           }
         }
         square++;
