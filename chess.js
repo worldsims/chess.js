@@ -362,8 +362,8 @@ var Chess = function(fen, game_type) {
 
     var sq = SQUARES[square];
 
-    /* don't let the user place more than one king */
-    if (piece.type == KING &&
+    /* don't let the user place more than one king unless playing the antichess variant */
+    if (piece.type == KING && !(game_type == ANTICHESS) &&
         !(kings[piece.color] == EMPTY || kings[piece.color] == sq)) {
       return false;
     }
@@ -651,7 +651,7 @@ var Chess = function(fen, game_type) {
       if (game_type == GAME_960 && (moves[i].flags & BITS.KSIDE_CASTLE || moves[i].flags & BITS.QSIDE_CASTLE)) legal_moves.push(moves[i]);
       else {
         make_move(moves[i]);
-        if (!king_attacked(us)) {
+        if (game_type == ANTICHESS || !king_attacked(us)) {
           legal_moves.push(moves[i]);
         }
         undo_move();
@@ -1068,7 +1068,8 @@ var Chess = function(fen, game_type) {
     FLAGS: FLAGS,
     GAME_TYPES: {
       STANDARD: GAME_STANDARD,
-      CHESS960: GAME_960
+      CHESS960: GAME_960,
+      ANTICHESS: ANTICHESS
     },
 
     /***************************************************************************
