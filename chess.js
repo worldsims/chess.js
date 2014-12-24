@@ -665,6 +665,7 @@ var Chess = function(fen, game_type) {
   /* convert a move from 0x88 coordinates to Standard Algebraic Notation
    * (SAN)
    */
+
   function move_to_san(move, precomputedMoves) {
     var output = '';
 
@@ -752,6 +753,9 @@ var Chess = function(fen, game_type) {
   }
 
   function in_check() {
+    if (game_type == GAME_ANTICHESS)
+      return false;
+
     return king_attacked(turn);
   }
 
