@@ -419,6 +419,10 @@ var Chess = function(fen, game_type) {
       if (board[from].type === PAWN &&
          (rank(to) === RANK_8 || rank(to) === RANK_1)) {
           var pieces = [QUEEN, ROOK, BISHOP, KNIGHT];
+
+          if (game_type == GAME_ANTICHESS)
+            pieces.push(KING);
+
           for (var i = 0, len = pieces.length; i < len; i++) {
             moves.push(build_move(board, from, to, flags, pieces[i]));
           }
