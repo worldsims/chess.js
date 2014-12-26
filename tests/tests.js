@@ -524,4 +524,19 @@ suite('Antichess Variant Tests', function() {
         console.info(fen);
         assert(fen.contains('2K5/1R6/8/8/8/8/8/6kn b - -'));
     });
+
+    test("In antichess, it is not possible to castle", function() {
+        var position = "rnbqk2r/p1ppppbp/5np1/8/8/5NP1/PPPPPPBP/RNBQK2R w KQkq -";
+        var antichess_variant = 2;
+        var chess = new Chess(position, antichess_variant);
+
+        var legalMoves = chess.moves();
+
+        var passed = true;
+        for (var j = 0; j < legalMoves.length; j++) {
+            if (legalMoves[0] == "0-0")
+            passed = false;
+        }
+        assert(passed);
+    })
 });
