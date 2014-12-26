@@ -1,6 +1,6 @@
 {
   "name": "chessli.js",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "A Javascript chess library for chess move generation/validation, piece placement/movement, and check/checkmate/draw detection. Chess960 support included.",
   "author": "Jeff Hlywa <jhlywa@gmail.com> (https://github.com/jhlywa)",
   "contributors": [
