@@ -516,7 +516,7 @@ var Chess = function(fen, game_type) {
     /* check for castling if: a) we're generating all moves, or b) we're doing
      * single square move generation on the king's square
      */
-    if ((!single_square) || last_sq === kings[us]) {
+    if (game_type != GAME_ANTICHESS && ((!single_square) || last_sq === kings[us])) {
       /* king-side castling */
       if (castling[us] & BITS.KSIDE_CASTLE) {
         if (game_type == GAME_STANDARD) {
