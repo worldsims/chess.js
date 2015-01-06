@@ -58,6 +58,7 @@ var Chess = function(fen, game_type) {
   var GAME_STANDARD = 0;
   var GAME_960 = 1;
   var GAME_ANTICHESS = 2;
+  var GAME_ATOMIC = 3;
 
   var PAWN_OFFSETS = {
     b: [16, 32, 17, 15],
@@ -343,6 +344,28 @@ var Chess = function(fen, game_type) {
   function get(square) {
     var piece = board[SQUARES[square]];
     return (piece) ? {type: piece.type, color: piece.color} : null;
+  }
+
+  /* In the atomic chess variant, we explode surrounding non-pawn pieces when a piece is captured. */
+  function explodeSurroundingSquares(square) {
+    var upLeft = square - 17;
+    var up = square - 16;
+    var upRight = square - 15;
+    var left = square - 1;
+    var right = square + 1;
+    var downLeft = square + 15;
+    var down = square + 16;
+    var downRight = square + 17;
+    var surroundingSquares = [upLeft, up, upRight, left, right, downLeft, down, downRight];
+
+    surroundingSquares.forEach(function(square) {
+      var board_square = boards[square];
+      if (boards[square] != null && board_square.type !== PAWN) {
+        remove(square);
+      }
+    });
+
+
   }
 
   function put(piece, square) {
@@ -784,6 +807,8 @@ var Chess = function(fen, game_type) {
     var them = swap_color(us);
     push(move);
 
+    var move_captures = board[move.to] != null;
+
     /* 960 castling hack */
     if (move.to != move.from) {
       board[move.to] = board[move.from];
@@ -875,6 +900,10 @@ var Chess = function(fen, game_type) {
       move_number++;
     }
     turn = swap_color(turn);
+
+    if (game_type === GAME_ATOMIC && move_captures) {
+      explodeSurroundingSquares(square);
+    }
   }
 
   function undo_move() {
