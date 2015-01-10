@@ -431,7 +431,6 @@ var Chess = function(fen, game_type) {
           type: board[s].type
         });
       });
-    console.log(move.explosion);
     }
     return move;
   }
