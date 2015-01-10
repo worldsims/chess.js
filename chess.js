@@ -346,28 +346,6 @@ var Chess = function(fen, game_type) {
     return (piece) ? {type: piece.type, color: piece.color} : null;
   }
 
-  /* In the atomic chess variant, we explode surrounding non-pawn pieces when a piece is captured. */
-  function explodeSurroundingSquares(square) {
-    var upLeft = square - 17;
-    var up = square - 16;
-    var upRight = square - 15;
-    var left = square - 1;
-    var right = square + 1;
-    var downLeft = square + 15;
-    var down = square + 16;
-    var downRight = square + 17;
-    var surroundingSquares = [upLeft, up, upRight, left, right, downLeft, down, downRight];
-
-    surroundingSquares.forEach(function(square) {
-      var board_square = boards[square];
-      if (boards[square] != null && board_square.type !== PAWN) {
-        remove(square);
-      }
-    });
-
-
-  }
-
   function put(piece, square) {
     /* check for valid piece object */
     if (!('type' in piece && 'color' in piece)) {
@@ -428,10 +406,32 @@ var Chess = function(fen, game_type) {
       move.promotion = promotion;
     }
 
+    var captures_on;
     if (board[to] && from !== to) {
       move.captured = board[to].type;
+      captures_on = move.to;
     } else if (flags & BITS.EP_CAPTURE) {
         move.captured = PAWN;
+        captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
+    }
+    if (game_type === GAME_ATOMIC && captures_on) {
+      move.explosion = [];
+      var upLeft = captures_on - 17;
+      var up = captures_on - 16;
+      var upRight = captures_on - 15;
+      var left = captures_on - 1;
+      var right = captures_on + 1;
+      var downLeft = captures_on + 15;
+      var down = captures_on + 16;
+      var downRight = captures_on + 17;
+      [upLeft, up, upRight, left, captures_on, right, downLeft, down, downRight].forEach(function(s) {
+        if (board[s] && (s === captures_on || board[s].type !== PAWN)) move.explosion.push({
+          square: s,
+          color: board[s].color,
+          type: board[s].type
+        });
+      });
+    console.log(move.explosion);
     }
     return move;
   }
@@ -807,8 +807,6 @@ var Chess = function(fen, game_type) {
     var them = swap_color(us);
     push(move);
 
-    var move_captures = board[move.to] != null;
-
     /* 960 castling hack */
     if (move.to != move.from) {
       board[move.to] = board[move.from];
@@ -817,74 +815,77 @@ var Chess = function(fen, game_type) {
 
     /* if ep capture, remove the captured pawn */
     if (move.flags & BITS.EP_CAPTURE) {
-      if (turn === BLACK) {
-        board[move.to - 16] = null;
-      } else {
-        board[move.to + 16] = null;
-      }
+      board[turn === BLACK ? move.to - 16 : move.to + 16] = null;
     }
 
-    /* if pawn promotion, replace with new piece */
-    if (move.flags & BITS.PROMOTION) {
-      board[move.to] = {type: move.promotion, color: us};
-    }
-
-    /* if we moved the king */
-    if (board[move.to].type === KING) {
-      kings[board[move.to].color] = move.to;
-
-      /* if we castled, move the rook next to the king */
-      if (move.flags & BITS.KSIDE_CASTLE) {
-        var rook_to = (us == 'w') ? SQUARES.f1 : SQUARES.f8;
-        var rook_from = ROOKS[us][1].square;
-        board[rook_to] = {type: ROOK, color: us};
-        if (rook_to != rook_from && board[rook_from].type == ROOK) { 
-          board[rook_from] = null;
-        }
-      } else if (move.flags & BITS.QSIDE_CASTLE) {
-        var rook_to = (us == 'w') ? SQUARES.d1 : SQUARES.d8;
-        var rook_from = ROOKS[us][0].square;
-        board[rook_to] = {type: ROOK, color: us};
-        if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) { 
-          board[rook_from] = null;
-        }
-      }
-
-      /* turn off castling */
-      castling[us] = '';
-    }
-
-    /* turn off castling if we move a rook */
-    if (castling[us]) {
-      for (var i = 0, len = ROOKS[us].length; i < len; i++) {
-        if (move.from === ROOKS[us][i].square &&
-            castling[us] & ROOKS[us][i].flag) {
-          castling[us] ^= ROOKS[us][i].flag;
-          break;
-        }
-      }
-    }
-
-    /* turn off castling if we capture a rook */
-    if (castling[them]) {
-      for (var i = 0, len = ROOKS[them].length; i < len; i++) {
-        if (move.to === ROOKS[them][i].square &&
-            castling[them] & ROOKS[them][i].flag) {
-          castling[them] ^= ROOKS[them][i].flag;
-          break;
-        }
-      }
-    }
-
-    /* if big pawn move, update the en passant square */
-    if (move.flags & BITS.BIG_PAWN) {
-      if (turn === 'b') {
-        ep_square = move.to - 16;
-      } else {
-        ep_square = move.to + 16;
-      }
+    /* atomic explosion */
+    if (move.explosion) {
+      move.explosion.forEach(function(kaboom) {
+        board[kaboom.square] = null;
+      });
     } else {
-      ep_square = EMPTY;
+      /* if pawn promotion, replace with new piece */
+      if (move.flags & BITS.PROMOTION) {
+        board[move.to] = {type: move.promotion, color: us};
+      }
+
+      /* if we moved the king */
+      if (board[move.to].type === KING) {
+        kings[board[move.to].color] = move.to;
+
+        /* if we castled, move the rook next to the king */
+        if (move.flags & BITS.KSIDE_CASTLE) {
+          var rook_to = (us == 'w') ? SQUARES.f1 : SQUARES.f8;
+          var rook_from = ROOKS[us][1].square;
+          board[rook_to] = {type: ROOK, color: us};
+          if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) {
+            board[rook_from] = null;
+          }
+        } else if (move.flags & BITS.QSIDE_CASTLE) {
+          var rook_to = (us == 'w') ? SQUARES.d1 : SQUARES.d8;
+          var rook_from = ROOKS[us][0].square;
+          board[rook_to] = {type: ROOK, color: us};
+          if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) {
+            board[rook_from] = null;
+          }
+        }
+
+        /* turn off castling */
+        castling[us] = '';
+      }
+
+      /* turn off castling if we move a rook */
+      if (castling[us]) {
+        for (var i = 0, len = ROOKS[us].length; i < len; i++) {
+          if (move.from === ROOKS[us][i].square &&
+              castling[us] & ROOKS[us][i].flag) {
+            castling[us] ^= ROOKS[us][i].flag;
+            break;
+          }
+        }
+      }
+
+      /* turn off castling if we capture a rook */
+      if (castling[them]) {
+        for (var i = 0, len = ROOKS[them].length; i < len; i++) {
+          if (move.to === ROOKS[them][i].square &&
+              castling[them] & ROOKS[them][i].flag) {
+            castling[them] ^= ROOKS[them][i].flag;
+            break;
+          }
+        }
+      }
+
+      /* if big pawn move, update the en passant square */
+      if (move.flags & BITS.BIG_PAWN) {
+        if (turn === 'b') {
+          ep_square = move.to - 16;
+        } else {
+          ep_square = move.to + 16;
+        }
+      } else {
+        ep_square = EMPTY;
+      }
     }
 
     /* reset the 50 move counter if a pawn is moved or a piece is captured */
@@ -900,10 +901,6 @@ var Chess = function(fen, game_type) {
       move_number++;
     }
     turn = swap_color(turn);
-
-    if (game_type === GAME_ATOMIC && move_captures) {
-      explodeSurroundingSquares(square);
-    }
   }
 
   function undo_move() {
@@ -921,40 +918,47 @@ var Chess = function(fen, game_type) {
     var us = turn;
     var them = swap_color(turn);
 
-    /* 960 castling hack */
-    if (move.to != move.from) {
-      board[move.from] = board[move.to];
-      board[move.from].type = move.piece  // to undo any promotions
-      board[move.to] = null;
+    if (move.explosion) {
+      move.explosion.forEach(function(kaboom) {
+        board[kaboom.square] = {type: kaboom.type, color: kaboom.color};
+      });
+      board[move.from] = {type: move.piece, color: move.color};
     }
-
-    if (move.flags & BITS.CAPTURE) {
-      board[move.to] = {type: move.captured, color: them};
-    } else if (move.flags & BITS.EP_CAPTURE) {
-      var index;
-      if (us === BLACK) {
-        index = move.to - 16;
-      } else {
-        index = move.to + 16;
+    else {
+      /* 960 castling hack */
+      if (move.to != move.from) {
+        board[move.from] = board[move.to];
+        board[move.from].type = move.piece  // to undo any promotions
+        board[move.to] = null;
       }
-      board[index] = {type: PAWN, color: them};
-    }
-
-
-    if (move.flags & (BITS.KSIDE_CASTLE | BITS.QSIDE_CASTLE)) {
-      var rook_to, rook_from;
-      if (move.flags & BITS.KSIDE_CASTLE) {
-        rook_to = ROOKS[us][1].square;
-        rook_from = (us == 'w') ? SQUARES.f1 : SQUARES.f8;
-      } else if (move.flags & BITS.QSIDE_CASTLE) {
-        rook_to = ROOKS[us][0].square;
-        rook_from = (us == 'w') ? SQUARES.d1 : SQUARES.d8;
+      if (move.flags & BITS.CAPTURE) {
+        board[move.to] = {type: move.captured, color: them};
+      } else if (move.flags & BITS.EP_CAPTURE) {
+        var index;
+        if (us === BLACK) {
+          index = move.to - 16;
+        } else {
+          index = move.to + 16;
+        }
+        board[index] = {type: PAWN, color: them};
       }
-      board[rook_to] = {type: ROOK, color: us};
 
-      /* be sure rook_from isn't the king (in 960) */
-      if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) {
-        board[rook_from] = null;
+
+      if (move.flags & (BITS.KSIDE_CASTLE | BITS.QSIDE_CASTLE)) {
+        var rook_to, rook_from;
+        if (move.flags & BITS.KSIDE_CASTLE) {
+          rook_to = ROOKS[us][1].square;
+          rook_from = (us == 'w') ? SQUARES.f1 : SQUARES.f8;
+        } else if (move.flags & BITS.QSIDE_CASTLE) {
+          rook_to = ROOKS[us][0].square;
+          rook_from = (us == 'w') ? SQUARES.d1 : SQUARES.d8;
+        }
+        board[rook_to] = {type: ROOK, color: us};
+
+        /* be sure rook_from isn't the king (in 960) */
+        if (rook_to != rook_from && board[rook_from] && board[rook_from].type == ROOK) {
+          board[rook_from] = null;
+        }
       }
     }
 
