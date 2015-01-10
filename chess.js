@@ -875,17 +875,17 @@ var Chess = function(fen, game_type) {
           }
         }
       }
+    }
 
-      /* if big pawn move, update the en passant square */
-      if (move.flags & BITS.BIG_PAWN) {
-        if (turn === 'b') {
-          ep_square = move.to - 16;
-        } else {
-          ep_square = move.to + 16;
-        }
+    /* if big pawn move, update the en passant square */
+    if (move.flags & BITS.BIG_PAWN) {
+      if (turn === 'b') {
+        ep_square = move.to - 16;
       } else {
-        ep_square = EMPTY;
+        ep_square = move.to + 16;
       }
+    } else {
+      ep_square = EMPTY;
     }
 
     /* reset the 50 move counter if a pawn is moved or a piece is captured */
