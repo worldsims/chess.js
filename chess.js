@@ -415,17 +415,28 @@ var Chess = function(fen, game_type) {
       captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
     }
     if (game_type === GAME_ATOMIC && captures_on) {
-      move.explosion = [{
-        square: move.to,
-        color: board[move.to].color,
-        type: board[move.to].type
-      }];
+      move.explosion = [];
+      // explode around capture
       for (var i in PIECE_OFFSETS.k) {
         var s = captures_on + PIECE_OFFSETS.k[i];
         if (board[s] && board[s].type !== PAWN) move.explosion.push({
           square: s,
           color: board[s].color,
           type: board[s].type
+        });
+      }
+      // explode capturer
+      move.explosion.push({
+        square: move.to,
+        color: move.color,
+        type: move.piece
+      });
+      if (flags & BITS.EP_CAPTURE) {
+        // explode passed pawn
+        move.explosion.push({
+          square: captures_on,
+          color: board[captures_on].color,
+          type: board[captures_on].type
         });
       }
     }
