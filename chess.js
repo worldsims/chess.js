@@ -416,9 +416,9 @@ var Chess = function(fen, game_type) {
     }
     if (game_type === GAME_ATOMIC && captures_on) {
       move.explosion = [{
-        square: captures_on,
-        color: board[captures_on].color,
-        type: board[captures_on].type
+        square: move.to,
+        color: board[move.to].color,
+        type: board[move.to].type
       }];
       for (var i in PIECE_OFFSETS.k) {
         var s = captures_on + PIECE_OFFSETS.k[i];
