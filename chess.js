@@ -411,26 +411,23 @@ var Chess = function(fen, game_type) {
       move.captured = board[to].type;
       captures_on = move.to;
     } else if (flags & BITS.EP_CAPTURE) {
-        move.captured = PAWN;
-        captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
+      move.captured = PAWN;
+      captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
     }
     if (game_type === GAME_ATOMIC && captures_on) {
-      move.explosion = [];
-      var upLeft = captures_on - 17;
-      var up = captures_on - 16;
-      var upRight = captures_on - 15;
-      var left = captures_on - 1;
-      var right = captures_on + 1;
-      var downLeft = captures_on + 15;
-      var down = captures_on + 16;
-      var downRight = captures_on + 17;
-      [upLeft, up, upRight, left, captures_on, right, downLeft, down, downRight].forEach(function(s) {
-        if (board[s] && (s === captures_on || board[s].type !== PAWN)) move.explosion.push({
+      move.explosion = [{
+        square: captures_on,
+        color: board[captures_on].color,
+        type: board[captures_on].type
+      }];
+      for (var i in PIECE_OFFSETS.k) {
+        var s = captures_on + PIECE_OFFSETS.k[i];
+        if (board[s] && board[s].type !== PAWN) move.explosion.push({
           square: s,
           color: board[s].color,
           type: board[s].type
         });
-      });
+      }
     }
     return move;
   }
