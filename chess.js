@@ -415,7 +415,12 @@ var Chess = function(fen, game_type) {
       captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
     }
     if (game_type === GAME_ATOMIC && captures_on) {
-      move.explosion = [];
+      // explode capturer
+      move.explosion = [{
+        square: captures_on,
+        color: board[captures_on].color,
+        type: board[captures_on].type
+      }];
       // explode around capture
       for (var i in PIECE_OFFSETS.k) {
         var s = captures_on + PIECE_OFFSETS.k[i];
@@ -425,18 +430,12 @@ var Chess = function(fen, game_type) {
           type: board[s].type
         });
       }
-      // explode capturer
-      move.explosion.push({
-        square: move.to,
-        color: move.color,
-        type: move.piece
-      });
       if (flags & BITS.EP_CAPTURE) {
         // explode passed pawn
         move.explosion.push({
-          square: captures_on,
-          color: board[captures_on].color,
-          type: board[captures_on].type
+          square: move.to,
+          color: move.color,
+          type: move.piece
         });
       }
     }
@@ -828,6 +827,15 @@ var Chess = function(fen, game_type) {
     /* atomic explosion */
     if (move.explosion) {
       move.explosion.forEach(function(kaboom) {
+        if (castling[them]) {
+          for (var i = 0, len = ROOKS[them].length; i < len; i++) {
+            if (kaboom.square === ROOKS[them][i].square &&
+                castling[them] & ROOKS[them][i].flag) {
+              castling[them] ^= ROOKS[them][i].flag;
+              break;
+            }
+          }
+        }
         board[kaboom.square] = null;
       });
     } else {
