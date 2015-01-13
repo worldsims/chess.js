@@ -1236,6 +1236,15 @@ var Chess = function(fen, game_type) {
             }
           }
         }
+        if (!move_obj && game_type === GAME_ATOMIC && move[move.length -1] === '#') {
+          move = move.replace('#', '+');
+          for (var i = 0, len = moves.length; i < len; i++) {
+            if (move === move_to_san(moves[i], moves)) {
+              move_obj = moves[i];
+              break;
+            }
+          }
+        }
       } else if (typeof move === 'object') {
         /* convert the pretty move object to an ugly move object */
         for (var i = 0, len = moves.length; i < len; i++) {
