@@ -797,7 +797,7 @@ var Chess = function(fen, game_type) {
 
   function in_checkmate() {
     return (in_check() && generate_moves().length === 0) || (
-      game_type == GAME_ATOMIC && !board[kings[us]]
+      game_type == GAME_ATOMIC && !board[kings[turn]]
     );
   }
 
