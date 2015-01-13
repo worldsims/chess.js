@@ -462,6 +462,9 @@ var Chess = function(fen, game_type) {
 
     var moves = [];
     var us = turn;
+
+    if (game_type === GAME_ATOMIC && !board[kings[us]]) return [];
+
     var them = swap_color(us);
     var second_rank = {b: RANK_7, w: RANK_2};
 
@@ -793,7 +796,9 @@ var Chess = function(fen, game_type) {
   }
 
   function in_checkmate() {
-    return in_check() && generate_moves().length === 0;
+    return (in_check() && generate_moves().length === 0) || (
+      game_type == GAME_ATOMIC && !board[kings[us]]
+    );
   }
 
   function push(move) {
