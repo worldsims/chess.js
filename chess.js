@@ -414,16 +414,16 @@ var Chess = function(fen, game_type) {
       move.captured = PAWN;
       captures_on = turn === BLACK ? move.to - 16 : move.to + 16;
     }
-    if (game_type === GAME_ATOMIC && captures_on) {
+    if (game_type === GAME_ATOMIC && move.captured) {
       // explode capturer
       move.explosion = [{
-        square: captures_on,
+        square: move.to,
         color: board[captures_on].color,
         type: board[captures_on].type
       }];
       // explode around capture
       for (var i in PIECE_OFFSETS.k) {
-        var s = captures_on + PIECE_OFFSETS.k[i];
+        var s = move.to + PIECE_OFFSETS.k[i];
         if (board[s] && board[s].type !== PAWN) move.explosion.push({
           square: s,
           color: board[s].color,
@@ -433,9 +433,9 @@ var Chess = function(fen, game_type) {
       if (flags & BITS.EP_CAPTURE) {
         // explode passed pawn
         move.explosion.push({
-          square: move.to,
-          color: move.color,
-          type: move.piece
+          square: captures_on,
+          color: swap_color(move.color),
+          type: PAWN
         });
       }
     }
