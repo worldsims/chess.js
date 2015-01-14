@@ -474,7 +474,7 @@ var Chess = function(fen, game_type) {
 
     /* do we want legal moves? */
     var legal = (typeof options !== 'undefined' && 'legal' in options) ?
-                options.legal : true;
+                options.legal : (game_type !== GAME_ATOMIC);
 
     /* are we generating moves for a single square? */
     if (typeof options !== 'undefined' && 'square' in options) {
@@ -1236,10 +1236,21 @@ var Chess = function(fen, game_type) {
             }
           }
         }
+        // atomic can checkmate where chess.js only sees a check
         if (!move_obj && game_type === GAME_ATOMIC && move[move.length -1] === '#') {
           move = move.replace('#', '+');
           for (var i = 0, len = moves.length; i < len; i++) {
             if (move === move_to_san(moves[i], moves)) {
+              move_obj = moves[i];
+              break;
+            }
+          }
+        }
+        // atomic king is not in check when close to the other
+        if (!move_obj && game_type === GAME_ATOMIC) {
+          for (var i = 0, len = moves.length; i < len; i++) {
+            var san = move_to_san(moves[i], moves);
+            if (san[san.length -1] === '+' && move === san.slice(0, san.length -1)) {
               move_obj = moves[i];
               break;
             }
