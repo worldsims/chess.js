@@ -323,6 +323,16 @@ var Chess = function(fen, game_type) {
     return [fen, turn, cflags, epflags, half_moves, move_number].join(' ');
   }
 
+  function set_header(args) {
+    for (var i = 0; i < args.length; i += 2) {
+      if (typeof args[i] === 'string' &&
+          typeof args[i + 1] === 'string') {
+        header[args[i]] = args[i + 1];
+      }
+    }
+    return header;
+  }
+
   /* called when the initial board setup is changed with put() or remove().
    * modifies the SetUp and FEN properties of the header object.  if the FEN is
    * equal to the default position, the SetUp and FEN are deleted
@@ -1187,6 +1197,108 @@ var Chess = function(fen, game_type) {
       return generate_fen();
     },
 
+    pgn: function(options) {
+      /* using the specification from http://www.chessclub.com/help/PGN-spec
+       * example for html usage: .pgn({ max_width: 72, newline_char: "<br />" })
+       */
+      var newline = (typeof options === 'object' &&
+                     typeof options.newline_char === 'string') ?
+                     options.newline_char : '\n';
+      var max_width = (typeof options === 'object' &&
+                       typeof options.max_width === 'number') ?
+                       options.max_width : 0;
+      var result = [];
+      var header_exists = false;
+
+      /* add the PGN header headerrmation */
+      for (var i in header) {
+        /* TODO: order of enumerated properties in header object is not
+         * guaranteed, see ECMA-262 spec (section 12.6.4)
+         */
+        result.push('[' + i + ' \"' + header[i] + '\"]' + newline);
+        header_exists = true;
+      }
+
+      if (header_exists && history.length) {
+        result.push(newline);
+      }
+
+      /* pop all of history onto reversed_history */
+      var reversed_history = [];
+      while (history.length > 0) {
+        reversed_history.push(undo_move());
+      }
+
+      var moves = [];
+      var move_string = '';
+      var pgn_move_number = 1;
+
+      /* build the list of moves.  a move_string looks like: "3. e3 e6" */
+      while (reversed_history.length > 0) {
+        var move = reversed_history.pop();
+
+        /* if the position started with black to move, start PGN with 1. ... */
+        if (pgn_move_number === 1 && move.color === 'b') {
+          move_string = '1. ...';
+          pgn_move_number++;
+        } else if (move.color === 'w') {
+          /* store the previous generated move_string if we have one */
+          if (move_string.length) {
+            moves.push(move_string);
+          }
+          move_string = pgn_move_number + '.';
+          pgn_move_number++;
+        }
+
+        move_string = move_string + ' ' + move_to_san(move);
+        make_move(move);
+      }
+
+      /* are there any other leftover moves? */
+      if (move_string.length) {
+        moves.push(move_string);
+      }
+
+      /* is there a result? */
+      if (typeof header.Result !== 'undefined') {
+        moves.push(header.Result);
+      }
+
+      /* history should be back to what is was before we started generating PGN,
+       * so join together moves
+       */
+      if (max_width === 0) {
+        return result.join('') + moves.join(' ');
+      }
+
+      /* wrap the PGN output at max_width */
+      var current_width = 0;
+      for (var i = 0; i < moves.length; i++) {
+        /* if the current move will push past max_width */
+        if (current_width + moves[i].length > max_width && i !== 0) {
+
+          /* don't end the line with whitespace */
+          if (result[result.length - 1] === ' ') {
+            result.pop();
+          }
+
+          result.push(newline);
+          current_width = 0;
+        } else if (i !== 0) {
+          result.push(' ');
+          current_width++;
+        }
+        result.push(moves[i]);
+        current_width += moves[i].length;
+      }
+
+      return result.join('');
+    },
+
+    header: function() {
+      return set_header(arguments);
+    },
+
     turn: function() {
       return turn;
     },
@@ -1345,3 +1457,4 @@ var Chess = function(fen, game_type) {
 if (typeof exports !== 'undefined') exports.Chess = Chess;
 /* export Chess object for any RequireJS compatible environment */
 if (typeof define !== 'undefined') define( function () { return Chess;  });
+
