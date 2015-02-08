@@ -1193,6 +1193,10 @@ var Chess = function(fen, game_type) {
       return in_check();
     },
 
+    in_checkmate: function() {
+      return in_checkmate();
+    },
+
     fen: function() {
       return generate_fen();
     },
