@@ -795,7 +795,7 @@ var Chess = function(fen, game_type) {
   }
 
   function king_attacked(color) {
-    return attacked(swap_color(color), kings[color]);
+    return kings[color] >= 0 && attacked(swap_color(color), kings[color]);
   }
 
   function in_check() {
@@ -1138,11 +1138,6 @@ var Chess = function(fen, game_type) {
                 return keys;
               })(),
     FLAGS: FLAGS,
-    GAME_TYPES: {
-      STANDARD: GAME_STANDARD,
-      CHESS960: GAME_960,
-      ANTICHESS: GAME_ANTICHESS
-    },
 
     /***************************************************************************
      * PUBLIC API
