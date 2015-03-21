@@ -754,6 +754,7 @@ var Chess = function(fen, game_type) {
   }
 
   function attacked(color, square) {
+    if (square === EMPTY) return false;
     for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
       /* did we run off the end of the board */
       if (i & 0x88) { i += 7; continue; }
@@ -795,7 +796,7 @@ var Chess = function(fen, game_type) {
   }
 
   function king_attacked(color) {
-    return kings[color] >= 0 && attacked(swap_color(color), kings[color]);
+    return attacked(swap_color(color), kings[color]);
   }
 
   function in_check() {
