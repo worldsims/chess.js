@@ -476,6 +476,7 @@ var Chess = function(fen, game_type) {
     if (game_type === GAME_ATOMIC && !board[kings[us]]) return [];
 
     var them = swap_color(us);
+    var first_rank = {b: RANK_8, w: RANK_1};
     var second_rank = {b: RANK_7, w: RANK_2};
 
     var first_sq = SQUARES.a8;
@@ -514,7 +515,7 @@ var Chess = function(fen, game_type) {
 
           /* double square */
           var square = i + PAWN_OFFSETS[us][1];
-          if (second_rank[us] === rank(i) && board[square] == null) {
+          if ((first_rank[us] === rank(i) ||second_rank[us] === rank(i)) && board[square] == null) {
             add_move(board, moves, i, square, BITS.BIG_PAWN);
           }
         }
