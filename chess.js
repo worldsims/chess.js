@@ -688,6 +688,7 @@ var Chess = function(fen) {
   }
 
   function attacked(color, square) {
+    if (square < 0) return false;
     for (var i = SQUARES.a8; i <= SQUARES.h1; i++) {
       /* did we run off the end of the board */
       if (i & 0x88) { i += 7; continue; }
